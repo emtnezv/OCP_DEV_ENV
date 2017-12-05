@@ -1,0 +1,58 @@
+{
+  "variables": {
+    "ACTIVATIONKEY": "",
+    "ORGANIZATION": "",
+    "OCP_VERSION": "",
+    "OCP_MINOR_VERSION": ""
+  },
+    "builders": [{
+        "type": "virtualbox-ovf",
+		"format": "ova",
+		"source_path": "rhel_ova/rhel_73.ova",
+		"ssh_pty": "true",
+		"ssh_username": "vagrant",
+		"ssh_password": "vagrant",
+		"headless": "true",
+		"output_directory": "ocp_ova",
+		"shutdown_command": "echo 'vagrant' | sudo -S shutdown -P now",
+		"vm_name": "ocp36_master",
+		"vboxmanage": [
+          ["modifyvm", "{{.Name}}", "--memory", "4096"],
+          ["modifyvm", "{{.Name}}", "--cpus", "2"],
+          ["modifyvm", "{{.Name}}", "--ioapic", "on"],
+          ["modifyvm", "{{.Name}}", "--nictype1", "virtio" ],
+          ["modifyvm", "{{.Name}}", "--nictype2", "virtio" ],
+          ["modifyvm", "{{.Name}}", "--natdnshostresolver1", "off"],
+          ["modifyvm", "{{.Name}}", "--natdnsproxy1", "off"],
+          ["modifyvm", "{{.Name}}", "--nic2", "intnet", "--intnet2", "OCP"],
+          ["modifyvm", "{{.Name}}", "--cableconnected2", "on"]
+      	],
+		"boot_command": "<enter>"
+    }],
+    "post-processors": [{
+        "output": "vagrant_box/ocp36.box",
+        "type": "vagrant"
+    }],
+    "provisioners": [
+	{
+	    "type": "file",
+        "source": "../files/os_inventory_ocp.yml",
+  	    "destination": "/tmp/os_inventory_ocp.yml"
+	},
+	{
+        "environment_vars": [
+          "ACTIVATIONKEY={{user `ACTIVATIONKEY`}}",
+          "ORGANIZATION={{user `ORGANIZATION`}}",
+          "OCP_VERSION={{user `OCP_VERSION`}}",
+          "OCP_MINOR_VERSION={{user `OCP_MINOR_VERSION`}}"
+        ],
+        "type": "shell",
+        "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+        "scripts": [
+            "../scripts/subscribe_rhel.sh",
+            "../scripts/install_ocp.sh",
+            "../scripts/unsubscribe_rhel.sh",
+            "../scripts/cleanup.sh"
+	    ]
+    }]
+}

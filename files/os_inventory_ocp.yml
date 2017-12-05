@@ -1,0 +1,50 @@
+[OSEv3:children]
+masters
+nodes
+etcd
+
+[OSEv3:vars]
+ansible_connection=local
+ansible_ssh_user=vagrant
+ansible_become=no
+ansible_ssh_user=vagrant
+
+debug_level=2
+deployment_type=openshift-enterprise
+# openshift_release=v{{ ansible_env.OCP_VERSION }}
+# openshift_pkg_version=-{{ ansible_env.OCP_VERSION }}{{ ansible_env.OCP_MINOR_VERSION }}
+openshift_install_examples=false
+openshift_public_hostname="127.0.0.1"
+osm_default_node_selector="region=primary"
+osm_use_cockpit=false
+
+# openshift_dns_ip=127.0.0.1
+openshift_disable_check=disk_availability,docker_storage,memory_availability,package_availability
+osm_custom_cors_origins=['0.0.0.0']
+osn_storage_plugin_deps=['None']
+openshift_hosted_router_selector='type=infra'
+openshift_hosted_manage_router=true
+openshift_hosted_manage_registry=false
+
+openshift_hosted_prometheus_deploy=true
+
+openshift_master_identity_providers=[{'name': 'allow_all', 'login': 'true', 'challenge': 'true', 'kind': 'AllowAllPasswordIdentityProvider'}]
+
+openshift_master_default_subdomain='127.0.0.1.nip.io'
+
+os_sdn_network_plugin_name='redhat/openshift-ovs-multitenant'
+openshift_master_api_port=8443
+openshift_master_console_port=8443
+
+[masters]
+192.168.200.5 openshift_ip="192.168.200.5" openshift_hostname="192.168.200.5"
+
+[etcd]
+192.168.200.5 etcd_ip="192.168.200.5"
+
+[nodes]
+192.168.200.5 openshift_ip="192.168.200.5" openshift_hostname="192.168.200.5" openshift_node_labels="{'type': 'infra','region': 'primary', 'zone': 'default'}"
+
+[nodes:vars]
+openshift_scheduleable='true'
+openshift_node_labels="{'region': 'primary', 'zone': 'default'}"

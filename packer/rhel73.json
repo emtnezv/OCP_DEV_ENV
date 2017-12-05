@@ -1,0 +1,110 @@
+{
+  "variables": {
+    "ACTIVATIONKEY": "",
+    "ORGANIZATION": ""
+  },
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "guest_os_type": "RedHat_64",
+      "vm_name": "rhel_73",
+      "format": "ova",
+      "iso_url": "../ISO/rhel-server-7.3-x86_64-dvd.iso",
+      "iso_checksum_type": "md5",
+      "iso_checksum": "34a65dbdfb8d9bb19b3a03d278df2a99",
+      "headless": "true",
+      "ssh_pty": "true",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_wait_timeout": "10000s",
+      "output_directory": "rhel_ova",
+      "http_directory": ".",
+      "boot_command": [
+        "<tab> text ks=https://raw.githubusercontent.com/emtnezv/OCP_DEV_ENV/master/files/ks.cfg<enter>"
+      ],
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "4096"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "2"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--ioapic",
+          "on"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--nictype1",
+          "virtio"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--nictype2",
+          "virtio"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--natdnshostresolver1",
+          "on"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--natdnsproxy1",
+          "on"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--nic2",
+          "intnet",
+          "--intnet2",
+          "OCP NETWORK"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cableconnected2",
+          "on"
+        ]
+      ],
+      "shutdown_command": "echo 'vagrant' | sudo -S shutdown -P now"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "echo 'vagrant' | sudo -S mkdir /etc/install_openshift",
+        "echo 'vagrant' | sudo -S chmod 777 /etc/install_openshift"
+      ]
+    },
+    {
+      "environment_vars": [
+        "ACTIVATIONKEY={{user `ACTIVATIONKEY`}}",
+        "ORGANIZATION={{user `ORGANIZATION`}}"
+      ],
+      "type": "shell",
+      "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+      "scripts": [
+        "../scripts/subscribe_rhel.sh",
+        "../scripts/vagrant_user.sh",
+        "../scripts/preinstall.sh",
+        "../scripts/unsubscribe_rhel.sh",
+        "../scripts/cleanup.sh"
+      ]
+    }
+  ]
+}
